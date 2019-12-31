@@ -1,0 +1,9 @@
+.DS_Store
+*.dSYM
+*.exe
+*.swp
+*.o
+bin/*
+tmp/*
+data/*
+
