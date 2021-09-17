@@ -6,7 +6,7 @@
 static unsigned int addStringToken(
         struct List* tokens,
         const char* stringValue) {
-    struct Token token;
+    struct JSONToken token;
 
     unsigned int valueLength = strlen(stringValue) + 3;
     token.lexeme = malloc(valueLength * sizeof(char));
@@ -25,7 +25,7 @@ static unsigned int addWhitespaceToken(
     unsigned int indentLevel = fmt.indent*fmt.level;
     if(indentLevel == 0) return STATUS_OK;
 
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_WHITESPACE;
     token.lexeme = malloc((indentLevel + 1) * sizeof(char));
     if(token.lexeme == NULL) return STATUS_ALLOC_ERR;
@@ -39,7 +39,7 @@ static unsigned int addWhitespaceToken(
 }
 
 static unsigned int addNewlineToken(struct List* tokens) {
-    struct Token token;
+    struct JSONToken token;
     char lineSep[] = "\r\n";
     token.lexeme = strCopy(lineSep);
     if(token.lexeme == NULL) return STATUS_ALLOC_ERR;
@@ -61,7 +61,7 @@ unsigned int unparseMembers(
     struct Iterator iterator = collection->iterator(genericData(generic));
 
     char memberSep[] = ",";
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_SYMBOL;
 
     unsigned int result;
@@ -106,7 +106,7 @@ unsigned int unparseElements(
     struct Iterator iterator = collection->iterator(genericData(generic));
 
     char memberSep[] = ",";
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_SYMBOL;
     unsigned int result;
     struct Generic *element = collection->next(&iterator);
@@ -145,7 +145,7 @@ unsigned int unparseArray(
         struct JSONFormat fmt) {
     if(generic->object != &Array.object) return STATUS_PARSE_ERR;
     char lParen[] = "[";
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_SYMBOL;
     token.lexeme = strCopy(lParen);
     if(!token.lexeme) return STATUS_ALLOC_ERR;
@@ -177,7 +177,7 @@ unsigned int unparseObject(
         struct List* tokens,
         struct JSONFormat fmt) {
     if(generic->object != &Map.object) return STATUS_PARSE_ERR;
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_SYMBOL;
 
     char lParen[] = "{";
@@ -208,7 +208,7 @@ unsigned int unparseNull(
         struct Generic *generic,
         struct List* tokens,
         struct JSONFormat fmt) {
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_NULL;
     char nullValue[] = "null";
 
@@ -226,7 +226,7 @@ unsigned int unparseBoolean(
         struct Generic *generic,
         struct List* tokens,
         struct JSONFormat fmt) {
-    struct Token token;
+    struct JSONToken token;
     char trueValue[] = "true";
     char falseValue[] = "false";
 
@@ -253,7 +253,7 @@ unsigned int unparseNumber(
         struct Generic *generic,
         struct List *tokens,
         struct JSONFormat fmt) {
-    struct Token token;
+    struct JSONToken token;
     char buffer [100];
     if(generic->object == &Integer) {
         long integerValue = *((long*)genericData(generic));
@@ -302,7 +302,7 @@ unsigned int unparseMember(
         struct Generic *element,
         struct List *tokens,
         struct JSONFormat fmt) {
-    struct Token token;
+    struct JSONToken token;
     token.token = JSON_SYMBOL;
 
     unsigned int result = addWhitespaceToken(tokens, fmt);
@@ -336,7 +336,7 @@ unsigned int unparseJSON(
 
     *outputLength = 0;
     struct Iterator it = listIterator(&tokens);
-    struct Token *token;
+    struct JSONToken *token;
     while((token = listNext(&it))) {
         *outputLength += strlen(token->lexeme);
     }

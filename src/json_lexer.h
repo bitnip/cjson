@@ -28,16 +28,16 @@ enum JSON_BUILTIN {
     JSON_NULL
 };
 
-struct Token {
+struct JSONToken {
     enum JSON_BUILTIN token;
     char* lexeme;
     unsigned int col;
     unsigned int row;
 };
 
-struct Token* tokenCompose();
-void tokenRelease(struct Token*);
-struct Token* tokenCopy(struct Token* other);
+struct JSONToken* tokenCompose();
+void tokenRelease(struct JSONToken*);
+struct JSONToken* tokenCopy(struct JSONToken* other);
 
 unsigned int lexJSON(struct List* tokens, char *toCheck);
 

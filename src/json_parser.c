@@ -7,7 +7,7 @@ unsigned int parseElement(struct Generic **generic, struct Iterator *iterator);
 unsigned int parseMember(char** key, struct Generic **value, struct Iterator *iterator);
 
 unsigned int parseWhitespace(struct Iterator *iterator) {
-    struct Token *token = listCurrent(iterator);
+    struct JSONToken *token = listCurrent(iterator);
     while(token) {
         if(token->token != JSON_WHITESPACE && token->token != JSON_NEWLINE) break;
         token = listNext(iterator);
@@ -17,7 +17,7 @@ unsigned int parseWhitespace(struct Iterator *iterator) {
 
 unsigned int parseNumber(struct Generic **generic, struct Iterator *iterator) {
     struct Iterator myIt = *iterator;
-    struct Token* token = listCurrent(&myIt);
+    struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_NUMBER) return STATUS_PARSE_ERR;
     // TODO: Too permissive, should require beginning with only hyphen or 1-9.
     char *end = afterNumber(token->lexeme);
@@ -42,7 +42,7 @@ unsigned int parseNumber(struct Generic **generic, struct Iterator *iterator) {
 
 unsigned int parseString(struct Generic **generic, struct Iterator *iterator) {
     struct Iterator myIt = *iterator;
-    struct Token* token = listCurrent(&myIt);
+    struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_STRING) return STATUS_PARSE_ERR; // TODO:
 
     // Trim quotation marks.
@@ -73,7 +73,7 @@ unsigned int parseString(struct Generic **generic, struct Iterator *iterator) {
 
 unsigned int parseBoolean(struct Generic **generic, struct Iterator *iterator) {
     struct Iterator myIt = *iterator;
-    struct Token* token = listCurrent(&myIt);
+    struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_BOOL) return STATUS_PARSE_ERR;
 
     if(*token->lexeme == 't') {
@@ -94,7 +94,7 @@ unsigned int parseBoolean(struct Generic **generic, struct Iterator *iterator) {
 
 unsigned int parseNull(struct Generic **generic, struct Iterator *iterator) {
     struct Iterator myIt = *iterator;
-    struct Token* token = listCurrent(&myIt);
+    struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_NULL) return STATUS_PARSE_ERR;
 
     *generic = genericCompose(&Pointer);
@@ -114,11 +114,11 @@ unsigned int parseElements(struct Generic *vector, struct Iterator *iterator) {
         unsigned int result = parseElement(&generic, iterator);
         if(result == STATUS_OK) {
             // TODO: Handle result.
-            genericAdd(vector, "0", generic);
+            genericAdd(vector, "-1", generic);
             elementCount++;
             parseWhitespace(iterator);
         }
-        struct Token *token = listCurrent(iterator);
+        struct JSONToken *token = listCurrent(iterator);
         if(!token || *token->lexeme != ',') {
             break;
         }
@@ -129,7 +129,7 @@ unsigned int parseElements(struct Generic *vector, struct Iterator *iterator) {
 
 unsigned int parseArray(struct Generic **generic, struct Iterator *iterator) {
     struct Iterator myIt = *iterator;
-    struct Token *token = listCurrent(&myIt);
+    struct JSONToken *token = listCurrent(&myIt);
     if(token && *token->lexeme != '[') {
         return STATUS_PARSE_ERR;
     }
@@ -160,7 +160,7 @@ unsigned int parseArray(struct Generic **generic, struct Iterator *iterator) {
 }
 
 unsigned int parseMembers(struct Generic *map, struct Iterator *iterator) {
-    struct Token* token = NULL;
+    struct JSONToken* token = NULL;
     while(1) {
         parseWhitespace(iterator);
 
@@ -182,7 +182,7 @@ unsigned int parseMembers(struct Generic *map, struct Iterator *iterator) {
 static unsigned int parseObject(struct Generic **generic, struct Iterator *iterator) {
     struct Iterator myIt = *iterator;
 
-    struct Token* token = listCurrent(&myIt);
+    struct JSONToken* token = listCurrent(&myIt);
     if(token && *token->lexeme != '{') {
         return STATUS_PARSE_ERR;
     }
@@ -199,7 +199,7 @@ static unsigned int parseObject(struct Generic **generic, struct Iterator *itera
     parseMembers(map, &myIt);
     parseWhitespace(&myIt);
     token = listCurrent(&myIt);
-    if(!token) return STATUS_PARSE_ERR; // TODO:
+    if(!token) return STATUS_PARSE_ERR;
 
     if(token && *token->lexeme == '}') {
         token = listNext(&myIt);
@@ -245,7 +245,7 @@ unsigned int parseMember(char **key, struct Generic **value, struct Iterator *it
     *key = *((char**)genericData(string));
     free(string);
 
-    struct Token *token = listCurrent(iterator);
+    struct JSONToken *token = listCurrent(iterator);
     parseWhitespace(iterator);
     token = listCurrent(iterator);
 
@@ -281,7 +281,7 @@ unsigned int parseJSON(struct Generic **generic, char* toCheck) {
     if(listNext(&iterator)) {
         // Garbage followed valid JSON.
         genericRelease(*generic);
-        result = STATUS_PARSE_ERR; // TODO:
+        result = STATUS_PARSE_ERR;
     }
 
     listRelease(&tokens);
