@@ -1,7 +1,7 @@
 #include "json_lexer.h"
 #include "cutil/src/string.h"
 
-struct JSONToken *tokenCopy(struct JSONToken* other) {
+struct JSONToken* tokenCopy(struct JSONToken* other) {
     struct JSONToken* token = malloc(sizeof(struct JSONToken));
     token->token = other->token;
     token->lexeme = other->lexeme;
@@ -14,8 +14,8 @@ void tokenRelease(struct JSONToken* token) {
     free(token);
 }
 
-unsigned int lexString(struct JSONToken *t, char* toCheck) {
-    char *offset = afterQuotedString(toCheck);
+unsigned int lexString(struct JSONToken* t, char* toCheck) {
+    char* offset = strAfterQuotedString(toCheck);
     if(offset != toCheck) {
         t->lexeme = toCheck;
         t->token = JSON_STRING;
@@ -24,8 +24,8 @@ unsigned int lexString(struct JSONToken *t, char* toCheck) {
     return 0;
 }
 
-unsigned int lexNumber(struct JSONToken *t, char* toCheck) {
-    char* offset = afterNumber(toCheck);
+unsigned int lexNumber(struct JSONToken* t, char* toCheck) {
+    const char* offset = strAfterNumber(toCheck);
     if(offset != toCheck) {
         t->lexeme = toCheck;
         t->token = JSON_NUMBER;
@@ -34,8 +34,8 @@ unsigned int lexNumber(struct JSONToken *t, char* toCheck) {
     return 0;
 }
 
-unsigned int lexBool(struct JSONToken *t, char* toCheck) {
-    char *offset = strStartsWith(toCheck, "true");
+unsigned int lexBool(struct JSONToken* t, char* toCheck) {
+    const char* offset = strStartsWith(toCheck, "true");
     if(offset) {
         t->lexeme = toCheck;
         t->token = JSON_BOOL;
@@ -50,8 +50,8 @@ unsigned int lexBool(struct JSONToken *t, char* toCheck) {
     return 0;
 }
 
-unsigned int lexNull(struct JSONToken *t, char* toCheck) {
-    char *offset = strStartsWith(toCheck, "null");
+unsigned int lexNull(struct JSONToken* t, char* toCheck) {
+    char* offset = strStartsWith(toCheck, "null");
     if(offset) {
         t->lexeme = toCheck;
         t->token = JSON_NULL;
@@ -60,8 +60,8 @@ unsigned int lexNull(struct JSONToken *t, char* toCheck) {
     return 0;
 }
 
-unsigned int lexWhitespace(struct JSONToken *t, char* toCheck) {
-    char *offset = afterLineBreak(toCheck);
+unsigned int lexWhitespace(struct JSONToken* t, char* toCheck) {
+    const char* offset = strAfterLineBreak(toCheck);
     if(offset != toCheck) {
         t->col = 0;
         t->row++;
@@ -69,7 +69,7 @@ unsigned int lexWhitespace(struct JSONToken *t, char* toCheck) {
         t->token = JSON_NEWLINE;
         return offset - toCheck;
     }
-    offset = afterWhitespace(toCheck);
+    offset = strAfterWhitespace(toCheck);
     if(offset != toCheck) {
         t->lexeme = toCheck;
         t->token = JSON_WHITESPACE;
@@ -78,7 +78,7 @@ unsigned int lexWhitespace(struct JSONToken *t, char* toCheck) {
     return 0;
 }
 
-unsigned int lexSymbol(struct JSONToken *t, char* toCheck) {
+unsigned int lexSymbol(struct JSONToken* t, char* toCheck) {
     switch(*toCheck) {
         case ',':
         case ':':

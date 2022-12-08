@@ -82,7 +82,7 @@ void testJSONMixed() {
     element = getAt(generic, paths[4]);
     assertNotNull(element);
     assertPointersEqual(element->object, &Float);
-    double floatValue = *((double*)genericData(element));
+    float floatValue = *((float*)genericData(element));
     assertFloatsEqual(floatValue, 21.1);
     // Check Null at `b.e`.
     element = getAt(generic, paths[5]);

@@ -3,11 +3,11 @@
 #include "cutil/src/string.h"
 #include "cutil/src/map/map.h"
 
-unsigned int parseElement(struct Generic **generic, struct Iterator *iterator);
-unsigned int parseMember(char** key, struct Generic **value, struct Iterator *iterator);
+unsigned int parseElement(struct Generic** generic, struct Iterator* iterator);
+unsigned int parseMember(char** key, struct Generic** value, struct Iterator* iterator);
 
-unsigned int parseWhitespace(struct Iterator *iterator) {
-    struct JSONToken *token = listCurrent(iterator);
+unsigned int parseWhitespace(struct Iterator* iterator) {
+    struct JSONToken* token = listCurrent(iterator);
     while(token) {
         if(token->token != JSON_WHITESPACE && token->token != JSON_NEWLINE) break;
         token = listNext(iterator);
@@ -15,24 +15,24 @@ unsigned int parseWhitespace(struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-unsigned int parseNumber(struct Generic **generic, struct Iterator *iterator) {
+unsigned int parseNumber(struct Generic** generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
     struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_NUMBER) return STATUS_PARSE_ERR;
     // TODO: Too permissive, should require beginning with only hyphen or 1-9.
-    char *end = afterNumber(token->lexeme);
-    char tmp = *end;
-    *end = 0;
 
-    if(afterDigits(token->lexeme) == end) {
+    const char* end = strAfterNumber(token->lexeme);
+    const char* tokenStr = strCopyN(token->lexeme, end-token->lexeme);
+    if(tokenStr == NULL) return STATUS_ALLOC_ERR;
+
+    if(strAfterDigits(token->lexeme) == end) {
         *generic = genericCompose(&Integer);
-        long integerValue = atoi(token->lexeme);
+        long integerValue = atoi(tokenStr);
         *((long*)genericData(*generic)) = integerValue;
     } else {
         *generic = genericCompose(&Float);
-        *((double*)genericData(*generic)) = atof(token->lexeme);
+        *((float*)genericData(*generic)) = atof(tokenStr);
     }
-    *end = tmp;
 
     listNext(&myIt);
 
@@ -40,24 +40,24 @@ unsigned int parseNumber(struct Generic **generic, struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-unsigned int parseString(struct Generic **generic, struct Iterator *iterator) {
+unsigned int parseString(struct Generic** generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
     struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_STRING) return STATUS_PARSE_ERR; // TODO:
 
     // Trim quotation marks.
     // TODO: Unescape string.
-    char *endQuote = afterQuotedString(token->lexeme);
+    char* endQuote = strAfterQuotedString(token->lexeme);
     if(endQuote != token->lexeme) {
         token->lexeme++;
         *(endQuote-1) = 0;
     }
 
-    struct Generic *result = genericCompose(&String);
+    struct Generic* result = genericCompose(&String);
     if(!result) {
         return STATUS_ALLOC_ERR;
     } 
-    char *value = strCopy(token->lexeme);
+    char* value = strCopy(token->lexeme);
     if(!value) {
         genericRelease(result);
         return STATUS_ALLOC_ERR;
@@ -71,7 +71,7 @@ unsigned int parseString(struct Generic **generic, struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-unsigned int parseBoolean(struct Generic **generic, struct Iterator *iterator) {
+unsigned int parseBoolean(struct Generic** generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
     struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_BOOL) return STATUS_PARSE_ERR;
@@ -92,7 +92,7 @@ unsigned int parseBoolean(struct Generic **generic, struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-unsigned int parseNull(struct Generic **generic, struct Iterator *iterator) {
+unsigned int parseNull(struct Generic** generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
     struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_NULL) return STATUS_PARSE_ERR;
@@ -106,11 +106,11 @@ unsigned int parseNull(struct Generic **generic, struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-unsigned int parseElements(struct Generic *vector, struct Iterator *iterator) {
+unsigned int parseElements(struct Generic* vector, struct Iterator* iterator) {
     unsigned int elementCount = 0;
     while(1) {
         parseWhitespace(iterator);
-        struct Generic *generic = NULL;
+        struct Generic* generic = NULL;
         unsigned int result = parseElement(&generic, iterator);
         if(result == STATUS_OK) {
             // TODO: Handle result.
@@ -118,7 +118,7 @@ unsigned int parseElements(struct Generic *vector, struct Iterator *iterator) {
             elementCount++;
             parseWhitespace(iterator);
         }
-        struct JSONToken *token = listCurrent(iterator);
+        struct JSONToken* token = listCurrent(iterator);
         if(!token || *token->lexeme != ',') {
             break;
         }
@@ -127,15 +127,15 @@ unsigned int parseElements(struct Generic *vector, struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-unsigned int parseArray(struct Generic **generic, struct Iterator *iterator) {
+unsigned int parseArray(struct Generic** generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
-    struct JSONToken *token = listCurrent(&myIt);
+    struct JSONToken* token = listCurrent(&myIt);
     if(token && *token->lexeme != '[') {
         return STATUS_PARSE_ERR;
     }
     token = listNext(&myIt);
 
-    struct Generic *vector = genericCompose(&Array.object);
+    struct Generic* vector = genericCompose(&Array.object);
     if(token && *token->lexeme == ']') {
         listNext(&myIt);
         *generic = vector;
@@ -159,13 +159,13 @@ unsigned int parseArray(struct Generic **generic, struct Iterator *iterator) {
     return STATUS_PARSE_ERR;
 }
 
-unsigned int parseMembers(struct Generic *map, struct Iterator *iterator) {
+unsigned int parseMembers(struct Generic* map, struct Iterator* iterator) {
     struct JSONToken* token = NULL;
     while(1) {
         parseWhitespace(iterator);
 
-        char *key = NULL;
-        struct Generic *value = NULL;
+        char* key = NULL;
+        struct Generic* value = NULL;
         unsigned int result = parseMember(&key, &value, iterator);
         if(result == STATUS_OK) {
             // TODO: Handle result.
@@ -179,7 +179,7 @@ unsigned int parseMembers(struct Generic *map, struct Iterator *iterator) {
     return STATUS_OK;
 }
 
-static unsigned int parseObject(struct Generic **generic, struct Iterator *iterator) {
+static unsigned int parseObject(struct Generic **generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
 
     struct JSONToken* token = listCurrent(&myIt);
@@ -188,7 +188,7 @@ static unsigned int parseObject(struct Generic **generic, struct Iterator *itera
     }
     token = listNext(&myIt);
 
-    struct Generic *map = genericCompose(&Map.object);
+    struct Generic* map = genericCompose(&Map.object);
     if(token && *token->lexeme == '}') {
         listNext(&myIt);
         *generic = map;
@@ -212,8 +212,8 @@ static unsigned int parseObject(struct Generic **generic, struct Iterator *itera
     return STATUS_PARSE_ERR;
 }
 
-unsigned int parseValue(struct Generic **generic, struct Iterator *iterator) {
-    unsigned int (*parsers[])(struct Generic **, struct Iterator *) = {
+unsigned int parseValue(struct Generic** generic, struct Iterator* iterator) {
+    unsigned int (*parsers[])(struct Generic**, struct Iterator*) = {
         parseArray,
         parseObject,
         parseString,
@@ -228,17 +228,17 @@ unsigned int parseValue(struct Generic **generic, struct Iterator *iterator) {
     return STATUS_PARSE_ERR;
 }
 
-unsigned int parseElement(struct Generic **generic, struct Iterator *iterator) {
+unsigned int parseElement(struct Generic** generic, struct Iterator* iterator) {
     parseWhitespace(iterator);
     int success = parseValue(generic, iterator);
     parseWhitespace(iterator);
     return success;
 }
 
-unsigned int parseMember(char **key, struct Generic **value, struct Iterator *iterator) {
+unsigned int parseMember(char** key, struct Generic** value, struct Iterator* iterator) {
     parseWhitespace(iterator);
 
-    struct Generic *string = NULL;
+    struct Generic* string = NULL;
     unsigned int result = parseString(&string, iterator);
     if(result) return result;
     // TODO: Make generic indexes?
@@ -263,7 +263,7 @@ unsigned int parseMember(char **key, struct Generic **value, struct Iterator *it
     return STATUS_OK;
 }
 
-unsigned int parseJSON(struct Generic **generic, char* toCheck) {
+unsigned int parseJSON(struct Generic** generic, char* toCheck) {
     *generic = NULL;
     struct List tokens;
     listCompose(&tokens);
