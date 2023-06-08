@@ -1,4 +1,5 @@
 SOURCE= \
+	src/json.c \
 	src/json_lexer.c \
 	src/json_parser.c \
 	src/json_unparser.c

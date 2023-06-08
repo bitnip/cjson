@@ -43,7 +43,7 @@ void testJSONLexNumber() {
     
     struct Iterator iterator = listIterator(&tokens);
     struct JSONToken *token = listNext(&iterator);
-    assertIntegersEqual(token->token, JSON_NUMBER);
+    assertIntegersEqual(token->token, JSON_TOKEN_NUMBER);
     assertPointersEqual(token->lexeme, input);
 
     listRelease(&tokens);
@@ -60,7 +60,7 @@ void testJSONLexNull() {
     
     struct Iterator iterator = listIterator(&tokens);
     struct JSONToken *token = listNext(&iterator);
-    assertIntegersEqual(token->token, JSON_NULL);
+    assertIntegersEqual(token->token, JSON_TOKEN_NULL);
     assertPointersEqual(token->lexeme, input);
 
     listRelease(&tokens);
@@ -110,32 +110,32 @@ void testJSONLexSimpleMap() {
     struct JSONToken *token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+1);
-    assertIntegersEqual(token->token, JSON_STRING);
+    assertIntegersEqual(token->token, JSON_TOKEN_STRING);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+6);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+7);
-    assertIntegersEqual(token->token, JSON_WHITESPACE);
+    assertIntegersEqual(token->token, JSON_TOKEN_WHITESPACE);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+8);
-    assertIntegersEqual(token->token, JSON_STRING);
+    assertIntegersEqual(token->token, JSON_TOKEN_STRING);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+15);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertIsNull(token);
@@ -156,47 +156,47 @@ void testJSONLexSimpleArray() {
     struct JSONToken *token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+1);
-    assertIntegersEqual(token->token, JSON_STRING);
+    assertIntegersEqual(token->token, JSON_TOKEN_STRING);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+6);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+7);
-    assertIntegersEqual(token->token, JSON_WHITESPACE);
+    assertIntegersEqual(token->token, JSON_TOKEN_WHITESPACE);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+8);
-    assertIntegersEqual(token->token, JSON_NUMBER);
+    assertIntegersEqual(token->token, JSON_TOKEN_NUMBER);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+11);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+12);
-    assertIntegersEqual(token->token, JSON_WHITESPACE);
+    assertIntegersEqual(token->token, JSON_TOKEN_WHITESPACE);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+13);
-    assertIntegersEqual(token->token, JSON_BOOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_BOOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+18);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertIsNull(token);
@@ -217,32 +217,32 @@ void testJSONLexMultiLine() {
     struct JSONToken *token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+1);
-    assertIntegersEqual(token->token, JSON_NULL);
+    assertIntegersEqual(token->token, JSON_TOKEN_NULL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+5);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+6);
-    assertIntegersEqual(token->token, JSON_NEWLINE);
+    assertIntegersEqual(token->token, JSON_TOKEN_NEWLINE);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+7);
-    assertIntegersEqual(token->token, JSON_NULL);
+    assertIntegersEqual(token->token, JSON_TOKEN_NULL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+11);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertIsNull(token);
@@ -263,27 +263,27 @@ void testJSONLexWithInvalid() {
     struct JSONToken *token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input);
-    assertIntegersEqual(token->token, JSON_INVALID);
+    assertIntegersEqual(token->token, JSON_TOKEN_INVALID);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+1);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+2);
-    assertIntegersEqual(token->token, JSON_INVALID);
+    assertIntegersEqual(token->token, JSON_TOKEN_INVALID);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+4);
-    assertIntegersEqual(token->token, JSON_SYMBOL);
+    assertIntegersEqual(token->token, JSON_TOKEN_SYMBOL);
 
     token = listNext(&iterator);
     assertNotNull(token);
     assertPointersEqual(token->lexeme, input+5);
-    assertIntegersEqual(token->token, JSON_INVALID);
+    assertIntegersEqual(token->token, JSON_TOKEN_INVALID);
 
     assertIntegersEqual(result, 3);
     assertIntegersEqual(listSize(&tokens), 5);

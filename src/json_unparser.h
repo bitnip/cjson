@@ -14,9 +14,9 @@ struct JSONFormat {
 };
 
 unsigned int unparseJSON(
-    struct Generic *generic,
+    struct Generic* generic,
     char** output,
-    unsigned int *outputLength,
+    unsigned int* outputLength,
     struct JSONFormat fmt);
 
 #ifdef __cplusplus

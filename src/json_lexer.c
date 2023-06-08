@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include "json.h"
 #include "json_lexer.h"
 #include "cutil/src/string.h"
 
@@ -17,7 +19,7 @@ void tokenRelease(struct JSONToken* token) {
 unsigned int lexString(struct JSONToken* t, char* toCheck) {
     char* offset = strAfterQuotedString(toCheck);
     if(offset != toCheck) {
-        t->token = JSON_STRING;
+        t->token = JSON_TOKEN_STRING;
         return offset - toCheck;
     }
     return 0;
@@ -26,30 +28,30 @@ unsigned int lexString(struct JSONToken* t, char* toCheck) {
 unsigned int lexNumber(struct JSONToken* t, char* toCheck) {
     const char* offset = strAfterNumber(toCheck);
     if(offset != toCheck) {
-        t->token = JSON_NUMBER;
+        t->token = JSON_TOKEN_NUMBER;
         return offset - toCheck;
     }
     return 0;
 }
 
 unsigned int lexBool(struct JSONToken* t, char* toCheck) {
-    const char* offset = strStartsWith(toCheck, "true");
+    const char* offset = strStartsWith(toCheck, JSON_TRUE_STR);
     if(offset) {
-        t->token = JSON_BOOL;
+        t->token = JSON_TOKEN_BOOL;
         return offset - toCheck;
     }
-    offset = strStartsWith(toCheck, "false");
+    offset = strStartsWith(toCheck, JSON_FALSE_STR);
     if(offset) {
-        t->token = JSON_BOOL;
+        t->token = JSON_TOKEN_BOOL;
         return offset - toCheck;
     }
     return 0;
 }
 
 unsigned int lexNull(struct JSONToken* t, char* toCheck) {
-    char* offset = strStartsWith(toCheck, "null");
+    char* offset = strStartsWith(toCheck, JSON_NULL_STR);
     if(offset) {
-        t->token = JSON_NULL;
+        t->token = JSON_TOKEN_NULL;
         return offset - toCheck;
     }
     return 0;
@@ -60,12 +62,12 @@ unsigned int lexWhitespace(struct JSONToken* t, char* toCheck) {
     if(offset != toCheck) {
         t->col = 0;
         t->row++;
-        t->token = JSON_NEWLINE;
+        t->token = JSON_TOKEN_NEWLINE;
         return offset - toCheck;
     }
     offset = strAfterWhitespace(toCheck);
     if(offset != toCheck) {
-        t->token = JSON_WHITESPACE;
+        t->token = JSON_TOKEN_WHITESPACE;
         return offset - toCheck;
     }
     return 0;
@@ -79,7 +81,7 @@ unsigned int lexSymbol(struct JSONToken* t, char* toCheck) {
         case ']':
         case '{':
         case '}': {
-            t->token = JSON_SYMBOL;
+            t->token = JSON_TOKEN_SYMBOL;
             return 1;
         }
         default:
@@ -88,8 +90,8 @@ unsigned int lexSymbol(struct JSONToken* t, char* toCheck) {
 }
 
 unsigned int lexInvalid(struct JSONToken* t, char* toCheck) {
-    if(t->lexeme != NULL && t->token == JSON_INVALID) return 0;
-    t->token = JSON_INVALID;
+    if(t->lexeme != NULL && t->token == JSON_TOKEN_INVALID) return 0;
+    t->token = JSON_TOKEN_INVALID;
     return 1;
 }
 
@@ -100,24 +102,32 @@ unsigned int lexJSON(struct List* tokens, char* toCheck) {
     token.row = 0;
     token.col = 0;
     token.lexeme = NULL;
-    token.token = JSON_INVALID;
+    token.token = JSON_TOKEN_INVALID;
+
+    unsigned int (*lexers[])(struct JSONToken*, char*) = {
+        lexWhitespace,
+        lexString,
+        lexNumber,
+        lexBool,
+        lexNull,
+        lexSymbol,
+        lexInvalid
+    };
 
     unsigned int offset;
     while(*toCheck) {
-        if(     (offset = lexWhitespace(&token, toCheck)) ||
-                (offset = lexString(&token, toCheck)) ||
-                (offset = lexNumber(&token, toCheck)) ||
-                (offset = lexBool(&token, toCheck)) ||
-                (offset = lexNull(&token, toCheck)) ||
-                (offset = lexSymbol(&token, toCheck)) ||
-                (offset = lexInvalid(&token, toCheck))
-        ) {
-            if(token.token == JSON_INVALID) {
-                invalid++;
+        for(unsigned int i = 0; i < sizeof(lexers) / sizeof(lexers[0]); i++) {
+            offset = lexers[i](&token, toCheck);
+            if(offset) {
+                if(token.token == JSON_TOKEN_INVALID) {
+                    invalid++;
+                }
+                token.lexeme = toCheck;
+                listAddTail(tokens, (void*)tokenCopy(&token)); // TODO: test for failure.
+                break;
             }
-            token.lexeme = toCheck;
-            listAddTail(tokens, (void*)tokenCopy(&token)); // TODO: test for failure.
-        } else {
+        }
+        if(!offset) {
             offset = 1;
         }
         token.col += offset;

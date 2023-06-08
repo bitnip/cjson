@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "json_parser.h"
 #include "json_unparser.h"
 #include "cutil/src/assertion.h"
