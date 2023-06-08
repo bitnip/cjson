@@ -7,42 +7,42 @@
 
 void testJSONParseEmptySequence() {
     char input[] = "[]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 }
 
 void testJSONParseSeqOfSeq() {
     char input[] = "[[],[],[]]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 }
 
 void testJSONParseEmptyMap() {
     char input[] = "{}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 }
 
 void testJSONParseMapOfMap() {
     char input[] = "{\"a\":{},\"b\":{},\"c\":{}}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 }
 
 void testJSONParseEmptyString() {
     char input[] = "\"\"";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 }
 
 void testJSONMixed() {
     char input[] = "{ \"a\" : [ \"foo\" , 9 ] , \"b\" : { \"d\": 21.1 , \"e\": null } , \"c\" : {\"t\": true, \"f\": false} }";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
     assertNotNull(generic);
@@ -57,10 +57,10 @@ void testJSONMixed() {
         "c"
     };
     // Check the root map has three elements.
-    struct Map *root = (struct Map*)genericData(generic);
+    struct Map* root = (struct Map*)genericData(generic);
     assertIntegersEqual(root->size, 3);
     // Check the array at `a`.
-    struct Generic *element = getAt(generic, paths[0]);
+    struct Generic* element = getAt(generic, paths[0]);
     assertNotNull(element);
     assertPointersEqual(element->object, &Array.object);
     // Check the string at `a.0`.
@@ -98,49 +98,49 @@ void testJSONMixed() {
 
 void testJSONParseObjectNoComma() {
     char input[] = "{\"a\": 1 \"b\": 2}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_PARSE_ERR);
 }
 
 void testJSONParseObjectNoClosingBracket() {
     char input[] = "{\"a\": 1, \"b\": 2";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_PARSE_ERR);
 }
 
 void testJSONParseObjectNoOpeningBracket() {
     char input[] = "\"a\": 1, \"b\": 2}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_PARSE_ERR);
 }
 
 void testJSONParseArrayNoComma() {
     char input[] = "[1 2]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_PARSE_ERR);
 }
 
 void testJSONParseArrayNoClosingBracket() {
     char input[] = "[1, 2";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_PARSE_ERR);
 }
 
 void testJSONParseArrayNoOpeningBracket() {
     char input[] = "1, 2]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_PARSE_ERR);
 }
 
 void testJSONParserFormatted() {
     char input[] = "{\"a\":2,\"b\":{},\"c\":{}}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 }

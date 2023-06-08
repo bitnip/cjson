@@ -246,7 +246,7 @@ static inline unsigned int parseMember(char** key, struct Generic** value, struc
     *key = *((char**)genericData(string));
     free(string);
 
-    struct JSONToken *token = listCurrent(iterator);
+    struct JSONToken* token = listCurrent(iterator);
     parseWhitespace(iterator);
     token = listCurrent(iterator);
 

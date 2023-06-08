@@ -8,7 +8,7 @@
 
 void testJSONUnparseEmptySequence() {
     char input[] = "[]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 
@@ -24,7 +24,7 @@ void testJSONUnparseEmptySequence() {
 void testJSONUnparseSeqOfSeq() {
     char input[] = "[[],[],[]]";
     char expected[] = "[[],[],[]]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 
@@ -41,7 +41,7 @@ void testJSONUnparseWhitespaceMap() {
     char input[] = "{\r\n    \"a\": 0,\r\n    \"b\": 1\r\n}";
     // TODO: Order of elements is not defined by cjson...
     char expected[] = "{\r\n    \"b\": 1,\r\n    \"a\": 0\r\n}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 
@@ -57,7 +57,7 @@ void testJSONUnparseWhitespaceMap() {
 void testJSONUnparseWhitespaceArray() {
     char input[] = "[\r\n    0,\r\n    1\r\n]";
     char expected[] = "[\r\n    0,\r\n    1\r\n]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 
@@ -74,7 +74,7 @@ void testJSONUnparseWhitespaceEmptyMap() {
     char input[] = "{}";
     // TODO: Order of elements is not defined by cjson...
     char expected[] = "{}";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 
@@ -91,7 +91,7 @@ void testJSONUnparseWhitespaceEmptyArray() {
     char input[] = "[]";
     // TODO: Order of elements is not defined by cjson...
     char expected[] = "[]";
-    struct Generic *generic;
+    struct Generic* generic;
     int result = parseJSON(&generic, input);
     assertIntegersEqual(result, STATUS_OK);
 

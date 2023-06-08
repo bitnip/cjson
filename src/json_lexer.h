@@ -38,7 +38,7 @@ struct JSONToken* tokenCompose();
 void tokenRelease(struct JSONToken*);
 struct JSONToken* tokenCopy(struct JSONToken* other);
 
-unsigned int lexJSON(struct List* tokens, char *toCheck);
+unsigned int lexJSON(struct List* tokens, char* toCheck);
 
 #ifdef __cplusplus
 }
