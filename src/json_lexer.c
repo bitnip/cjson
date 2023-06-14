@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "json.h"
 #include "json_lexer.h"
+#include "cutil/src/error.h"
 #include "cutil/src/string.h"
 
 struct JSONToken* tokenCopy(struct JSONToken* other) {
@@ -96,7 +97,7 @@ unsigned int lexInvalid(struct JSONToken* t, char* toCheck) {
 }
 
 unsigned int lexJSON(struct List* tokens, char* toCheck) {
-    unsigned int invalid = 0;
+    unsigned int result = STATUS_OK;
 
     struct JSONToken token;
     token.row = 0;
@@ -120,10 +121,13 @@ unsigned int lexJSON(struct List* tokens, char* toCheck) {
             offset = lexers[i](&token, toCheck);
             if(offset) {
                 if(token.token == JSON_TOKEN_INVALID) {
-                    invalid++;
+                    result = STATUS_PARSE_ERR;
                 }
                 token.lexeme = toCheck;
-                listAddTail(tokens, (void*)tokenCopy(&token)); // TODO: test for failure.
+                int result = listAddTail(tokens, (void*)tokenCopy(&token));
+                if(result) {
+                    return result;
+                }
                 break;
             }
         }
@@ -133,5 +137,5 @@ unsigned int lexJSON(struct List* tokens, char* toCheck) {
         token.col += offset;
         toCheck += offset;
     }
-    return invalid;
+    return result;
 }
