@@ -291,7 +291,6 @@ void testJSONLexWithInvalid() {
 }
 
 void testJSONLexer() {
-
     testJSONLexTerminator();
     testJSONLexEmptyString();
     testJSONLexEmptyObject();

@@ -75,12 +75,12 @@ unsigned int lexWhitespace(struct JSONToken* t, char* toCheck) {
 
 unsigned int lexSymbol(struct JSONToken* t, char* toCheck) {
     switch(*toCheck) {
-        case ',':
-        case ':':
-        case '[':
-        case ']':
-        case '{':
-        case '}': {
+        case JSON_SEPERATOR:
+        case JSON_MEMBER_SEP:
+        case JSON_ARR_BEGIN:
+        case JSON_ARR_CLOSE:
+        case JSON_MAP_BEGIN:
+        case JSON_MAP_CLOSE: {
             t->token = JSON_TOKEN_SYMBOL;
             return 1;
         }
