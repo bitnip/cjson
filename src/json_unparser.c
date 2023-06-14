@@ -50,13 +50,13 @@ static unsigned int addNewlineToken(struct List* tokens) {
     return listAddTail(tokens, tokenCopy(&token));
 }
 
-unsigned int unparseMember(
+static unsigned int unparseMember(
         const void* key,
         struct Generic* element,
         struct List* tokens,
         struct JSONFormat fmt);
 
-unsigned int unparseMembers(
+static unsigned int unparseMembers(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -96,12 +96,12 @@ unsigned int unparseMembers(
     return STATUS_OK;
 }
 
-unsigned int unparseElement(
+static unsigned int unparseElement(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt);
 
-unsigned int unparseElements(
+static unsigned int unparseElements(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -142,7 +142,7 @@ unsigned int unparseElements(
     return STATUS_OK;
 }
 
-unsigned int unparseArray(
+static unsigned int unparseArray(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -176,7 +176,7 @@ unsigned int unparseArray(
     return result;
 }
 
-unsigned int unparseObject(
+static unsigned int unparseObject(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -188,7 +188,7 @@ unsigned int unparseObject(
     token.lexeme = strCopy(mapOpen);
     if(!token.lexeme) return STATUS_ALLOC_ERR;
 
-    int result = listAddTail(tokens, tokenCopy(&token));
+    int result = listAddTail(tokens, tokenCopy(&token)); // TODO: Check tokenCopy.
     if(result) return result;
 
     fmt.level++;
@@ -208,7 +208,7 @@ unsigned int unparseObject(
     return listAddTail(tokens, tokenCopy(&token)); // TODO: Check tokenCopy.
 }
 
-unsigned int unparseNull(
+static unsigned int unparseNull(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -225,7 +225,7 @@ unsigned int unparseNull(
     return listAddTail(tokens, tokenCopy(&token)); // TODO:
 }
 
-unsigned int unparseBoolean(
+static unsigned int unparseBoolean(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -242,7 +242,7 @@ unsigned int unparseBoolean(
     return listAddTail(tokens, tokenCopy(&token)); // TODO:
 }
 
-unsigned int unparseString(
+static unsigned int unparseString(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -250,7 +250,7 @@ unsigned int unparseString(
     return addStringToken(tokens, *((char**)genericData(generic)));
 }
 
-unsigned int unparseNumber(
+static unsigned int unparseNumber(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -272,7 +272,7 @@ unsigned int unparseNumber(
     return listAddTail(tokens, tokenCopy(&token)); // TODO:
 }
 
-unsigned int unparseValue(
+static unsigned int unparseValue(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
@@ -291,14 +291,14 @@ unsigned int unparseValue(
     return STATUS_PARSE_ERR;
 }
 
-unsigned int unparseElement(
+static unsigned int unparseElement(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
     return unparseValue(generic, tokens, fmt);
 }
 
-unsigned int unparseMember(
+static unsigned int unparseMember(
         const void* key,
         struct Generic* element,
         struct List* tokens,
@@ -331,7 +331,7 @@ unsigned int unparseJSON(
         struct JSONFormat fmt) {
     struct List tokens;
     listCompose(&tokens);
-    tokens.freeData = (void (*)(void*))tokenRelease; // TODO: ALL SORTS OF MEMORY ISSUES.
+    tokens.freeData = (void (*)(void*))tokenRelease;
 
     int result = unparseElement(generic, &tokens, fmt);
 
@@ -343,11 +343,15 @@ unsigned int unparseJSON(
     }
 
     *output = malloc(*outputLength+1);
+    if(!output){
+
+    }
     char* ptr = *output;
     it = listIterator(&tokens);
     while((token = listNext(&it))) {
         char* ptr2 = token->lexeme;
         while(*ptr2) *ptr++ = *ptr2++;
+        free(token->lexeme);
     }
     *ptr = 0;
 

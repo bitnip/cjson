@@ -5,10 +5,10 @@
 #include "cutil/src/string.h"
 #include "cutil/src/map/map.h"
 
-unsigned int parseElement(struct Generic** generic, struct Iterator* iterator);
+static unsigned int parseElement(struct Generic** generic, struct Iterator* iterator);
 static inline unsigned int parseMember(char** key, struct Generic** value, struct Iterator* iterator);
 
-unsigned int parseWhitespace(struct Iterator* iterator) {
+static unsigned int parseWhitespace(struct Iterator* iterator) {
     struct JSONToken* token = listCurrent(iterator);
     while(token) {
         if(token->token != JSON_TOKEN_WHITESPACE && token->token != JSON_TOKEN_NEWLINE) break;
@@ -204,13 +204,14 @@ static unsigned int parseObject(struct Generic** generic, struct Iterator* itera
         return STATUS_OK;
     }
 
+
     genericRelease(map);
     return STATUS_PARSE_ERR;
 }
 
-unsigned int parseElement(struct Generic** generic, struct Iterator* iterator) {
-    parseWhitespace(iterator);/*
-    unsigned int (*parsers[])(struct Generic**, struct Iterator*) = {
+static unsigned int parseElement(struct Generic** generic, struct Iterator* iterator) {
+    parseWhitespace(iterator);
+    const unsigned int (*parsers[])(struct Generic**, struct Iterator*) = {
         parseArray,
         parseObject,
         parseString,
@@ -223,9 +224,9 @@ unsigned int parseElement(struct Generic** generic, struct Iterator* iterator) {
         parseWhitespace(iterator);
         if(result == STATUS_OK) return result;
     }
-    return STATUS_PARSE_ERR;*/
+    return STATUS_PARSE_ERR;
 
-
+/*
     unsigned int status;
     if( !(status = parseArray(generic, iterator)) ||
         !(status = parseObject(generic, iterator)) ||
@@ -234,7 +235,7 @@ unsigned int parseElement(struct Generic** generic, struct Iterator* iterator) {
         !(status = parseBoolean(generic, iterator)) ||
         !(status = parseNull(generic, iterator)));
     parseWhitespace(iterator);
-    return status;
+    return status;*/
 }
 
 static inline unsigned int parseMember(char** key, struct Generic** value, struct Iterator* iterator) {
