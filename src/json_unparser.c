@@ -40,7 +40,7 @@ static unsigned int addStringToken(
 }
 
 static unsigned int addWhitespaceToken(
-        struct List* tokens,
+        struct List *tokens,
         struct JSONFormat fmt) {
     unsigned int indentLevel = fmt.indent*fmt.level;
     if(indentLevel == 0) return STATUS_OK;
@@ -59,7 +59,7 @@ static unsigned int addWhitespaceToken(
     return addToken(tokens, &tempToken);
 }
 
-static unsigned int addNewlineToken(struct List* tokens) {
+static unsigned int addNewlineToken(struct List *tokens) {
     struct JSONToken tempToken;
     tempToken.lexeme = strCopy(ASCII_V_DELIMITERS);
     if(tempToken.lexeme == NULL) return STATUS_ALLOC_ERR;
@@ -69,24 +69,24 @@ static unsigned int addNewlineToken(struct List* tokens) {
 }
 
 static unsigned int unparseMember(
-        const void* key,
-        struct Generic* element,
-        struct List* tokens,
+        const void *key,
+        struct Generic *element,
+        struct List *tokens,
         struct JSONFormat fmt);
 
 static unsigned int unparseMembers(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
-    struct Collection* collection = (struct Collection*)generic->object;
+    struct Collection *collection = (struct Collection*)generic->object;
     struct Iterator iterator = collection->iterator(genericData(generic));
 
     struct JSONToken tempToken;
     tempToken.token = JSON_TOKEN_SYMBOL;
 
     unsigned int result;
-    struct Generic* element = NULL;
-    const void* key;
+    struct Generic *element = NULL;
+    const void *key;
     while((key = mapKey(&iterator))) {
         if(fmt.indent > 0) {
             result = addNewlineToken(tokens);
@@ -118,21 +118,21 @@ static unsigned int unparseMembers(
 }
 
 static unsigned int unparseElement(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt);
 
 static unsigned int unparseElements(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
-    struct Collection* collection = (struct Collection*)generic->object;
+    struct Collection *collection = (struct Collection*)generic->object;
     struct Iterator iterator = collection->iterator(genericData(generic));
 
     struct JSONToken tempToken;
     tempToken.token = JSON_TOKEN_SYMBOL;
     unsigned int result;
-    struct Generic* element = collection->next(&iterator);
+    struct Generic *element = collection->next(&iterator);
     while(element) {
         if(fmt.indent > 0) {
             result = addNewlineToken(tokens);
@@ -167,8 +167,8 @@ static unsigned int unparseElements(
 }
 
 static unsigned int unparseArray(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     if(generic->object != &Array.object) return STATUS_PARSE_ERR;
     struct JSONToken tempToken;
@@ -202,8 +202,8 @@ static unsigned int unparseArray(
 }
 
 static unsigned int unparseObject(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     if(generic->object != &Map.object) return STATUS_PARSE_ERR;
     struct JSONToken tempToken;
@@ -236,14 +236,14 @@ static unsigned int unparseObject(
 }
 
 static unsigned int unparseNull(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     struct JSONToken tempToken;
     tempToken.token = JSON_TOKEN_NULL;
 
     if(generic->object != &Pointer) return STATUS_PARSE_ERR;
-    void* pointerValue = *((void**)genericData(generic));
+    void *pointerValue = *((void**)genericData(generic));
     if(pointerValue != NULL) return STATUS_INPUT_ERR;
 
     tempToken.lexeme = strCopy(JSON_NULL_STR);
@@ -253,15 +253,15 @@ static unsigned int unparseNull(
 }
 
 static unsigned int unparseBoolean(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     struct JSONToken tempToken;
 
     if(generic->object != &Bool) return STATUS_PARSE_ERR;
     char boolValue = *((char*)genericData(generic));
 
-    const char* value = boolValue ? JSON_TRUE_STR : JSON_FALSE_STR;
+    const char *value = boolValue ? JSON_TRUE_STR : JSON_FALSE_STR;
 
     tempToken.lexeme = strCopy(value);
     if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
@@ -270,16 +270,16 @@ static unsigned int unparseBoolean(
 }
 
 static unsigned int unparseString(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     if(generic->object != &String) return STATUS_PARSE_ERR;
     return addStringToken(tokens, *((char**)genericData(generic)));
 }
 
 static unsigned int unparseNumber(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     struct JSONToken tempToken;
     char buffer[100];
@@ -301,8 +301,8 @@ static unsigned int unparseNumber(
 }
 
 static unsigned int unparseValue(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     unsigned int (*unparsers[])(struct Generic*, struct List*, struct JSONFormat) = {
         unparseArray,
@@ -320,16 +320,16 @@ static unsigned int unparseValue(
 }
 
 static unsigned int unparseElement(
-        struct Generic* generic,
-        struct List* tokens,
+        struct Generic *generic,
+        struct List *tokens,
         struct JSONFormat fmt) {
     return unparseValue(generic, tokens, fmt);
 }
 
 static unsigned int unparseMember(
-        const void* key,
-        struct Generic* element,
-        struct List* tokens,
+        const void *key,
+        struct Generic *element,
+        struct List *tokens,
         struct JSONFormat fmt) {
     struct JSONToken tempToken;
     tempToken.token = JSON_TOKEN_SYMBOL;
@@ -353,9 +353,9 @@ static unsigned int unparseMember(
 }
 
 unsigned int unparseJSON(
-        struct Generic* generic,
-        char** output,
-        unsigned int* outputLength,
+        struct Generic *generic,
+        char **output,
+        unsigned int *outputLength,
         struct JSONFormat fmt) {
     struct List tokens;
     listCompose(&tokens);
@@ -374,10 +374,10 @@ unsigned int unparseJSON(
     if(!output){
 
     }
-    char* ptr = *output;
+    char *ptr = *output;
     it = listIterator(&tokens);
     while((token = listNext(&it))) {
-        char* ptr2 = token->lexeme;
+        char *ptr2 = token->lexeme;
         while(*ptr2) *ptr++ = *ptr2++;
         free(token->lexeme);
     }

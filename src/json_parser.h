@@ -18,27 +18,27 @@ enum JSON_TYPE {
 };
 
 struct JSONPair {
-    struct JSONPair* next;
-    char* name;
+    struct JSONPair *next;
+    char *name;
     enum JSON_TYPE type;
 };
 struct JSONObject {
     enum JSON_TYPE type;
-    struct JSONPair* pairs;
+    struct JSONPair *pairs;
 };
 
 struct JSONValue {
-    struct JSONValue* next;
+    struct JSONValue *next;
     enum JSON_TYPE type;
 };
 struct JSONArray {
     enum JSON_TYPE type;
-    struct JSONValue* values;
+    struct JSONValue *values;
 };
 
 struct JSONString {
     enum JSON_TYPE type;
-    char* value;
+    char *value;
 };
 
 struct JSONNumber {
@@ -48,7 +48,7 @@ struct JSONNumber {
     int exponent;
 };
 
-unsigned int parseJSON(struct Generic** generic, char* toCheck);
+unsigned int parseJSON(struct Generic **generic, char *toCheck);
 
 #ifdef __cplusplus
 }
