@@ -4,8 +4,9 @@
 #include "cutil/src/error.h"
 #include "cutil/src/string.h"
 
-struct JSONToken* tokenCopy(struct JSONToken* other) {
-    struct JSONToken* token = malloc(sizeof(struct JSONToken));
+struct JSONToken *tokenCopy(struct JSONToken *other) {
+    struct JSONToken *token = malloc(sizeof(struct JSONToken));
+    if(token == NULL) return token;
     token->token = other->token;
     token->lexeme = other->lexeme;
     token->col = other->col;
@@ -124,8 +125,15 @@ unsigned int lexJSON(struct List* tokens, char* toCheck) {
                     result = STATUS_PARSE_ERR;
                 }
                 token.lexeme = toCheck;
-                int result = listAddTail(tokens, (void*)tokenCopy(&token));
+                // Create token.
+                struct JSONToken *newToken = tokenCopy(&token);
+                if(newToken == NULL) {
+                    return STATUS_ALLOC_ERR;
+                }
+                // Add token to token list.
+                int result = listAddTail(tokens, (void*)newToken);
                 if(result) {
+                    tokenRelease(newToken);
                     return result;
                 }
                 break;

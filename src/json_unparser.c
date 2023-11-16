@@ -7,20 +7,36 @@
 #include "cutil/src/error.h"
 #include "json.h"
 
+static unsigned int addToken(
+        struct List *tokens,
+        struct JSONToken *tempToken) {
+    struct JSONToken *newToken = tokenCopy(tempToken);
+    if(newToken == NULL) {
+        free(tempToken->lexeme);
+        return STATUS_ALLOC_ERR;
+    }
+    int result = listAddTail(tokens, newToken);
+    if(result) {
+        free(newToken->lexeme);
+        tokenRelease(newToken);
+    }
+    return result;
+}
+
 static unsigned int addStringToken(
-        struct List* tokens,
-        const char* stringValue) {
-    struct JSONToken token;
-
+        struct List *tokens,
+        const char *stringValue) {
+    struct JSONToken tempToken;
+    // Alloc space to store the token lexeme.
     unsigned int valueLength = strlen(stringValue) + 3;
-    token.lexeme = malloc(valueLength * sizeof(char));
+    tempToken.lexeme = malloc(valueLength * sizeof(char));
+    if(tempToken.lexeme == NULL) return STATUS_ALLOC_ERR;
+    // Copy the lexeme into newly allocated memory.
+    snprintf(tempToken.lexeme, valueLength, "\"%s\"", (char*)stringValue);
+    // Set the token type.
+    tempToken.token = JSON_TOKEN_STRING;
 
-    if(token.lexeme == NULL) return STATUS_ALLOC_ERR;
-
-    snprintf(token.lexeme, valueLength, "\"%s\"", (char*)stringValue);
-    token.token = JSON_TOKEN_STRING;
-
-    return listAddTail(tokens, tokenCopy(&token));
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int addWhitespaceToken(
@@ -29,25 +45,27 @@ static unsigned int addWhitespaceToken(
     unsigned int indentLevel = fmt.indent*fmt.level;
     if(indentLevel == 0) return STATUS_OK;
 
-    struct JSONToken token;
-    token.token = JSON_TOKEN_WHITESPACE;
-    token.lexeme = malloc((indentLevel + 1) * sizeof(char));
-    if(token.lexeme == NULL) return STATUS_ALLOC_ERR;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_WHITESPACE;
+    tempToken.lexeme = malloc((indentLevel + 1) * sizeof(char));
+    if(tempToken.lexeme == NULL) return STATUS_ALLOC_ERR;
     // Null terminate the token.
-    token.lexeme[indentLevel] = 0;
+    tempToken.lexeme[indentLevel] = 0;
     // Fill token with desired whitespace.
     for(unsigned char i = 0; i < indentLevel; i++) {
-        token.lexeme[i] = fmt.useTabs ? JSON_TAB : JSON_SPACE;
+        tempToken.lexeme[i] = fmt.useTabs ? JSON_TAB : JSON_SPACE;
     }
-    return listAddTail(tokens, tokenCopy(&token));
+
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int addNewlineToken(struct List* tokens) {
-    struct JSONToken token;
-    token.lexeme = strCopy(ASCII_V_DELIMITERS);
-    if(token.lexeme == NULL) return STATUS_ALLOC_ERR;
-    token.token = JSON_TOKEN_NEWLINE;
-    return listAddTail(tokens, tokenCopy(&token));
+    struct JSONToken tempToken;
+    tempToken.lexeme = strCopy(ASCII_V_DELIMITERS);
+    if(tempToken.lexeme == NULL) return STATUS_ALLOC_ERR;
+    tempToken.token = JSON_TOKEN_NEWLINE;
+
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int unparseMember(
@@ -63,8 +81,8 @@ static unsigned int unparseMembers(
     struct Collection* collection = (struct Collection*)generic->object;
     struct Iterator iterator = collection->iterator(genericData(generic));
 
-    struct JSONToken token;
-    token.token = JSON_TOKEN_SYMBOL;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_SYMBOL;
 
     unsigned int result;
     struct Generic* element = NULL;
@@ -81,10 +99,13 @@ static unsigned int unparseMembers(
 
         if((key = mapKey(&iterator))) {
             const char seperator[] = {JSON_SEPERATOR, 0};
-            token.lexeme = strCopy(seperator);
-            if(!token.lexeme) return STATUS_ALLOC_ERR;
-            result = listAddTail(tokens, tokenCopy(&token));
-            if(result) return result;
+            tempToken.lexeme = strCopy(seperator);
+            if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
+
+            result = addToken(tokens, &tempToken);
+            if(result) {
+                return result;
+            }
         } else {
             if(fmt.indent > 0) {
                 result = addNewlineToken(tokens);
@@ -108,8 +129,8 @@ static unsigned int unparseElements(
     struct Collection* collection = (struct Collection*)generic->object;
     struct Iterator iterator = collection->iterator(genericData(generic));
 
-    struct JSONToken token;
-    token.token = JSON_TOKEN_SYMBOL;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_SYMBOL;
     unsigned int result;
     struct Generic* element = collection->next(&iterator);
     while(element) {
@@ -132,11 +153,14 @@ static unsigned int unparseElements(
         }
 
         const char seperator[] = {JSON_SEPERATOR, 0};
-        token.lexeme = strCopy(seperator);
-        if(!token.lexeme) return STATUS_ALLOC_ERR;
+        tempToken.lexeme = strCopy(seperator);
+        if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-        result = listAddTail(tokens, tokenCopy(&token));
-        if(result) return result;
+        // Add token to token list.
+        result = addToken(tokens, &tempToken);
+        if(result) {
+            return result;
+        }
     }
 
     return STATUS_OK;
@@ -147,15 +171,18 @@ static unsigned int unparseArray(
         struct List* tokens,
         struct JSONFormat fmt) {
     if(generic->object != &Array.object) return STATUS_PARSE_ERR;
-    struct JSONToken token;
-    token.token = JSON_TOKEN_SYMBOL;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_SYMBOL;
 
     const char arrayBegin[] = {JSON_ARR_BEGIN, 0};
-    token.lexeme = strCopy(arrayBegin);
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.lexeme = strCopy(arrayBegin);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-    int result = listAddTail(tokens, tokenCopy(&token));
-    if(result) return result;
+
+    unsigned int result = addToken(tokens, &tempToken);
+    if(result) {
+        return result;
+    }
 
     fmt.level++;
 
@@ -168,12 +195,10 @@ static unsigned int unparseArray(
     if(result) return result;
 
     const char arrayClose[] = {JSON_ARR_CLOSE, 0};
-    token.lexeme = strCopy(arrayClose);
+    tempToken.lexeme = strCopy(arrayClose);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-    result = listAddTail(tokens, tokenCopy(&token));
-    if(result) return result;
-
-    return result;
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int unparseObject(
@@ -181,15 +206,17 @@ static unsigned int unparseObject(
         struct List* tokens,
         struct JSONFormat fmt) {
     if(generic->object != &Map.object) return STATUS_PARSE_ERR;
-    struct JSONToken token;
-    token.token = JSON_TOKEN_SYMBOL;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_SYMBOL;
 
     const char mapOpen[] = {JSON_MAP_BEGIN, 0};
-    token.lexeme = strCopy(mapOpen);
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.lexeme = strCopy(mapOpen);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-    int result = listAddTail(tokens, tokenCopy(&token)); // TODO: Check tokenCopy.
-    if(result) return result;
+    int result = addToken(tokens, &tempToken);
+    if(result) {
+        return result;
+    }
 
     fmt.level++;
 
@@ -202,44 +229,44 @@ static unsigned int unparseObject(
     if(result) return result;
 
     const char mapClose[] = {JSON_MAP_CLOSE, 0};
-    token.lexeme = strCopy(mapClose);
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.lexeme = strCopy(mapClose);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-    return listAddTail(tokens, tokenCopy(&token)); // TODO: Check tokenCopy.
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int unparseNull(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
-    struct JSONToken token;
-    token.token = JSON_TOKEN_NULL;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_NULL;
 
     if(generic->object != &Pointer) return STATUS_PARSE_ERR;
     void* pointerValue = *((void**)genericData(generic));
     if(pointerValue != NULL) return STATUS_INPUT_ERR;
 
-    token.lexeme = strCopy(JSON_NULL_STR);
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.lexeme = strCopy(JSON_NULL_STR);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-    return listAddTail(tokens, tokenCopy(&token)); // TODO:
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int unparseBoolean(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
-    struct JSONToken token;
+    struct JSONToken tempToken;
 
     if(generic->object != &Bool) return STATUS_PARSE_ERR;
     char boolValue = *((char*)genericData(generic));
 
     const char* value = boolValue ? JSON_TRUE_STR : JSON_FALSE_STR;
 
-    token.lexeme = strCopy(value);
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
-    token.token = JSON_TOKEN_BOOL;
-    return listAddTail(tokens, tokenCopy(&token)); // TODO:
+    tempToken.lexeme = strCopy(value);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.token = JSON_TOKEN_BOOL;
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int unparseString(
@@ -254,22 +281,23 @@ static unsigned int unparseNumber(
         struct Generic* generic,
         struct List* tokens,
         struct JSONFormat fmt) {
-    struct JSONToken token;
+    struct JSONToken tempToken;
     char buffer[100];
     if(generic->object == &Integer) {
         long integerValue = *((long*)genericData(generic));
         snprintf(buffer, 100, "%ld", integerValue);
-        token.lexeme = strCopy(buffer);
+        tempToken.lexeme = strCopy(buffer);
     } else if (generic->object == &Float) {
         double doubleValue = *((float*)genericData(generic));
         snprintf(buffer, 100, "%f", doubleValue);
-        token.lexeme = strCopy(buffer);
+        tempToken.lexeme = strCopy(buffer);
     } else {
         return STATUS_INPUT_ERR;
     }
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
-    token.token = JSON_TOKEN_NUMBER;
-    return listAddTail(tokens, tokenCopy(&token)); // TODO:
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.token = JSON_TOKEN_NUMBER;
+
+    return addToken(tokens, &tempToken);
 }
 
 static unsigned int unparseValue(
@@ -303,8 +331,8 @@ static unsigned int unparseMember(
         struct Generic* element,
         struct List* tokens,
         struct JSONFormat fmt) {
-    struct JSONToken token;
-    token.token = JSON_TOKEN_SYMBOL;
+    struct JSONToken tempToken;
+    tempToken.token = JSON_TOKEN_SYMBOL;
 
     unsigned int result = addWhitespaceToken(tokens, fmt);
     if(result) return result;
@@ -312,10 +340,10 @@ static unsigned int unparseMember(
     if(result) return result;
 
     const char memberSep[] = {JSON_MEMBER_SEP, 0}; 
-    token.lexeme = strCopy(memberSep);
-    if(!token.lexeme) return STATUS_ALLOC_ERR;
+    tempToken.lexeme = strCopy(memberSep);
+    if(!tempToken.lexeme) return STATUS_ALLOC_ERR;
 
-    result = listAddTail(tokens, tokenCopy(&token)); // TODO:
+    result = addToken(tokens, &tempToken);
     if(result) return result;
 
     struct JSONFormat fmtSpace = {1, 1, 0};

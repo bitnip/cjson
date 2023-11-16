@@ -45,7 +45,7 @@ unsigned int parseNumber(struct Generic** generic, struct Iterator* iterator) {
 unsigned int parseString(struct Generic** generic, struct Iterator* iterator) {
     struct Iterator myIt = *iterator;
     struct JSONToken* token = listCurrent(&myIt);
-    if(token && token->token != JSON_TOKEN_STRING) return STATUS_PARSE_ERR; // TODO:
+    if(token && token->token != JSON_TOKEN_STRING) return STATUS_PARSE_ERR;
 
     // Trim quotation marks.
     // TODO: Unescape string.
@@ -110,14 +110,14 @@ unsigned int parseNull(struct Generic** generic, struct Iterator* iterator) {
 }
 
 unsigned int parseElements(struct Generic* vector, struct Iterator* iterator) {
-    unsigned int elementCount = 0;
     while(1) {
         struct Generic* generic = NULL;
         unsigned int result = parseElement(&generic, iterator);
         if(result == STATUS_OK) {
-            // TODO: Handle result.
-            genericAdd(vector, "-1", generic);
-            elementCount++;
+            unsigned int addResult = genericAdd(vector, "-1", generic);
+            if(addResult) {
+                return addResult;
+            }
         }
         struct JSONToken* token = listCurrent(iterator);
         if(!token || *token->lexeme != JSON_SEPERATOR) {
@@ -165,9 +165,11 @@ unsigned int parseMembers(struct Generic* map, struct Iterator* iterator) {
         char* key = NULL;
         struct Generic* value = NULL;
         unsigned int result = parseMember(&key, &value, iterator);
-        if(result == STATUS_OK) {
-            // TODO: Handle result.
-            genericAdd(map, key, value);
+        if(result == STATUS_OK) {\
+            unsigned int addResult = genericAdd(map, key, value);
+            if(addResult) {
+                return addResult;
+            }
         }
         token = listCurrent(iterator);
         if(!token || *token->lexeme != JSON_SEPERATOR) break;
@@ -225,17 +227,6 @@ static unsigned int parseElement(struct Generic** generic, struct Iterator* iter
         if(result == STATUS_OK) return result;
     }
     return STATUS_PARSE_ERR;
-
-/*
-    unsigned int status;
-    if( !(status = parseArray(generic, iterator)) ||
-        !(status = parseObject(generic, iterator)) ||
-        !(status = parseString(generic, iterator)) ||
-        !(status = parseNumber(generic, iterator)) ||
-        !(status = parseBoolean(generic, iterator)) ||
-        !(status = parseNull(generic, iterator)));
-    parseWhitespace(iterator);
-    return status;*/
 }
 
 static inline unsigned int parseMember(char** key, struct Generic** value, struct Iterator* iterator) {
