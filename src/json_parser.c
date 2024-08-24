@@ -28,11 +28,11 @@ unsigned int parseNumber(struct Generic **generic, struct Iterator *iterator) {
     if(tokenStr == NULL) return STATUS_ALLOC_ERR;
 
     if(strAfterDigits(token->lexeme) == end) {
-        *generic = genericCompose(&Integer);
+        *generic = genericCompose(&Integer); // TODO: Handle alloc failure.
         long integerValue = atoi(tokenStr);
         *((long*)genericData(*generic)) = integerValue;
     } else {
-        *generic = genericCompose(&Float);
+        *generic = genericCompose(&Float); // TODO: Handle alloc failure.
         *((float*)genericData(*generic)) = atof(tokenStr);
     }
 
@@ -80,10 +80,10 @@ unsigned int parseBoolean(struct Generic **generic, struct Iterator *iterator) {
     if(token && token->token != JSON_TOKEN_BOOL) return STATUS_PARSE_ERR;
 
     if(*token->lexeme == *JSON_TRUE_STR) {
-        *generic = genericCompose(&Bool);
+        *generic = genericCompose(&Bool); // TODO: Handle alloc failure.
         *((char*)genericData(*generic)) = 1;
     } else if(*token->lexeme == *JSON_FALSE_STR) {
-        *generic = genericCompose(&Bool);
+        *generic = genericCompose(&Bool); // TODO: Handle alloc failure.
         *((char*)genericData(*generic)) = 0;
     } else {
         return STATUS_PARSE_ERR;
@@ -100,7 +100,7 @@ unsigned int parseNull(struct Generic **generic, struct Iterator *iterator) {
     struct JSONToken* token = listCurrent(&myIt);
     if(token && token->token != JSON_TOKEN_NULL) return STATUS_PARSE_ERR;
 
-    *generic = genericCompose(&Pointer);
+    *generic = genericCompose(&Pointer); // TODO: Handle alloc failure.
     *((void**)genericData(*generic)) = NULL;
 
     listNext(&myIt);
@@ -136,7 +136,7 @@ unsigned int parseArray(struct Generic **generic, struct Iterator *iterator) {
     }
     token = listNext(&myIt);
 
-    struct Generic *vector = genericCompose(&Array.object);
+    struct Generic *vector = genericCompose(&Array.object); // TODO: Handle alloc failure.
     if(token && *token->lexeme == JSON_ARR_CLOSE) {
         listNext(&myIt);
         *generic = vector;
@@ -187,7 +187,7 @@ static unsigned int parseObject(struct Generic **generic, struct Iterator *itera
     }
     token = listNext(&myIt);
 
-    struct Generic *map = genericCompose(&Map.object);
+    struct Generic *map = genericCompose(&Map.object); // TODO: Handle alloc failure.
     if(token && *token->lexeme == JSON_MAP_CLOSE) {
         listNext(&myIt);
         *generic = map;
