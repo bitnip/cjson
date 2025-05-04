@@ -5,8 +5,6 @@ COVERAGE_EXE:=bin/coverage_$(APP)
 
 include cfg/cfg.mk
 
-CC=x86_64-w64-mingw32-gcc
-CC_COVERAGE=gcc
 CFLAGS=-Wall -Werror -pedantic -save-temps -O3 -fno-builtin -fno-ident
 CFLAGS_COVERAGE=-coverage -fprofile-arcs -ftest-coverage -g -ggdb
 CFLAGS_DEBUG=-g -ggdb

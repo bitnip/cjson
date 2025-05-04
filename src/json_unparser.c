@@ -258,7 +258,7 @@ static unsigned int unparseBoolean(
         struct JSONFormat fmt) {
     struct JSONToken tempToken;
 
-    if(generic->object != &Bool) return STATUS_PARSE_ERR;
+    if(generic->object != &Boolean) return STATUS_PARSE_ERR;
     char boolValue = *((char*)genericData(generic));
 
     const char *value = boolValue ? JSON_TRUE_STR : JSON_FALSE_STR;

@@ -80,10 +80,10 @@ unsigned int parseBoolean(struct Generic **generic, struct Iterator *iterator) {
     if(token && token->token != JSON_TOKEN_BOOL) return STATUS_PARSE_ERR;
 
     if(*token->lexeme == *JSON_TRUE_STR) {
-        *generic = genericCompose(&Bool); // TODO: Handle alloc failure.
+        *generic = genericCompose(&Boolean); // TODO: Handle alloc failure.
         *((char*)genericData(*generic)) = 1;
     } else if(*token->lexeme == *JSON_FALSE_STR) {
-        *generic = genericCompose(&Bool); // TODO: Handle alloc failure.
+        *generic = genericCompose(&Boolean); // TODO: Handle alloc failure.
         *((char*)genericData(*generic)) = 0;
     } else {
         return STATUS_PARSE_ERR;
